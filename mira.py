@@ -9,9 +9,15 @@ def buildNetwork(training, testing, labelNum, attributes, labels):
     #Do networthy stuff
     pass
 
-def subdivide(image,subNum):
-    pass
+def subdivide(image,divisionNum):
+    #Use method where we subdivide both sides into (divisionNum) pieces, and then
+    #iterate over half and make a square, then go over half and make a square, etc...
 
+    halfNum = (imageSize/divisionNum)/2 #describes how much we should move over each time
+    #possibly a for loop for going over the top row, then moving down half... repeat...
+    
+    #img2 = img.crop((0, 0, 100, 100)) #crops a 100x100 square starting at top left (0,0)
+    
     #Decides how many subdivisions there are
 
     #subNum is the size of the subdivision that we want (as an nxn square)
@@ -21,40 +27,52 @@ def subdivide(image,subNum):
     
 
 def preProcessImages(images):
-    largestImage = getLargestImage(images)
-    imageSize = largestImage.size #[x,y]
+    imageSize = getLargestImage(images) #[x,y]
     transformImages(images, imageSize)
-    
 
-def getLargestImage(images):
+def getLargestImage(images): #gets the largest, most square image
     largestImage = None
     bestDim = 1
     
-    for image in images:
-        size = image.size
-        x = size[0]
-        y = size[1]
-        diff = math.fabs(x-y)
-        if diff == 0: #accounts for a perfect square
-            diff = 1
-        if diff/(x+y) < bestDim:
-            bestDim = diff/(x+y)
-            largestImage = image
+    for imageType in images:
+        for image in imageType:
+            size = image[0].size
+            x = size[0]
+            y = size[1]
+            diff = math.fabs(x-y)
+            if diff == 0: #accounts for a perfect square
+                diff = 1
+            if diff/(x+y) < bestDim:
+                bestDim = diff/(x+y)
+                largestImage = image[0]
 
-    print(largestImage.size)
-    exit(5)
+    largestSize = largestImage.size
+    x = largestSize[0]
+    y = largestSize[1]
+    while x != y: #ensures the size is a square
+        if x < y:
+            x += 1
+        if y < x:
+            y += 1
+            
+    while x%4 != 0: #ensures the dimensions are easy to deal with in subdividing
+        x += 1
+        y += 1
+
+    return [x,y]
+
+def transformImages (images, size): 
 
 
-def transformImages (images, size): #MAKE SURE TO HAVE DIMENSIONS BE A MULTIPLE OF 4
-    pass
+    for imageType in images:
+        for image in imageType:
+            image[0] = image[0].resize(size, Image.ANTIALIAS)
     
     
-def main(images,num_neurons,learning_rate,training_runs,percentage,seed):
-                        
+def main(images,num_neurons,learning_rate,training_runs,percentage,divisionNum,seed):
+                       
     preProcessImages(images)
-    
-    for image in images:
-        subdivide(image)
+    subdivide(images,divisionNum)
 
     #Now we have a list of image tensors??
 
@@ -68,25 +86,33 @@ if __name__ == "__main__":
     learning_rate = 1#float(sys.argv[2]) # K-Value (an integer)
     training_runs = 1#int(sys.argv[3])
     percentage = 1#float(sys.argv[4])  # Percentage of data to be used for TRAINING
-    seed = 1#float(sys.argv[5])
+    divisonNum = #int(sys.argv[5])
+    seed = 1 #float(sys.argv[6])
 
-    #OPEN FILES HERE
+    
+    #Opens Images Here (Image files must be of type .jpg)
     images = [] #where an image is [image,label]
     photoTypes = []
     CWD = os.getcwd() + "/photos"
     
     for photoType in os.listdir(CWD): #Adds all photo type folders
-        photoTypes.append(photoType)
-        
+        if "." in photoType:
+            continue
+        else:
+            photoTypes.append(photoType)
     
     for photoType in photoTypes:
+        photoTypeList = [] #separates all images of a specific phototype for easy train/test distribution
         photoDir = CWD + "/" + photoType
         for imageName in os.listdir(photoDir):
-            image = Image.open(imageName).convert('LA') #Greyscales and keeps alpha
-            images.append([image,photoType])
-
-    #Possibly make cases for seed not being a string, etc...
-    main(images,num_neurons,learning_rate,training_runs,percentage,seed)
+            if ".jpg" in imageName:
+                image = Image.open(photoDir +"/"+ imageName).convert('LA') #Greyscales and keeps alpha
+                photoTypeList.append([image,photoType])
+            else:
+                continue
+        images.append(photoTypeList)
+                
+    main(images,num_neurons,learning_rate,training_runs,percentage,divisionNum,seed)
      
     
     
