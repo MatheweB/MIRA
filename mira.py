@@ -5,25 +5,37 @@ import tensorflow as tf
 import math
 
 
+#images = [[phototype1[image[imageFile,imageName]]
+
 def buildNetwork(training, testing, labelNum, attributes, labels):
     #Do networthy stuff
     pass
 
-def subdivide(image,divisionNum):
-    #Use method where we subdivide both sides into (divisionNum) pieces, and then
-    #iterate over half and make a square, then go over half and make a square, etc...
+def subdivide(images,divisionNum): #squares go DOWN, not up
+    imageSideSize = images[0][0][0].size[0] #gets the length of one side of an image
+    stepNum = 2 #Decides how far over we move per subdivision (keep this as 2 or some multiple of 2)
 
-    halfNum = (imageSize/divisionNum)/2 #describes how much we should move over each time
-    #possibly a for loop for going over the top row, then moving down half... repeat...
-    
-    #img2 = img.crop((0, 0, 100, 100)) #crops a 100x100 square starting at top left (0,0)
-    
-    #Decides how many subdivisions there are
+    segNum = (imageSideSize/divisionNum)/stepNum #describes how much we should move over each time
 
-    #subNum is the size of the subdivision that we want (as an nxn square)
+    divisionList = [] #List of steps for our algorithm
 
-    #rounds subNum if it doesn't work
+    squareSize = (imageSideSize/divisionNum)
+    totalSize = (imageSideSize) - squareSize
+    currentSize = 0
+    divisionList.append(currentSize)
+    while currentSize < totalSize:
+        currentSize = currentSize + segNum
+        divisionList.append(currentSize)
     
+    for imageType in images:
+        for image in imageType:
+            subImageList = []
+            for xStep in divisionList:
+                for yStep in divisionList:
+                    subImage = image[0].crop((xStep,yStep,squareSize,squareSize)) #FIGURE THIS OUT
+                    subImage.show() #Remove when done
+                    subImageList.append(list(subImage.getdata()))
+            image[0] = subImageList #changes all images into an array of sub-images    
     
 
 def preProcessImages(images):
@@ -61,9 +73,8 @@ def getLargestImage(images): #gets the largest, most square image
 
     return [x,y]
 
+
 def transformImages (images, size): 
-
-
     for imageType in images:
         for image in imageType:
             image[0] = image[0].resize(size, Image.ANTIALIAS)
@@ -74,8 +85,10 @@ def main(images,num_neurons,learning_rate,training_runs,percentage,divisionNum,s
     preProcessImages(images)
     subdivide(images,divisionNum)
 
-    #Now we have a list of image tensors??
+    print(len(images[0][0][0][0])) #imagetype,image,imagefile,1st sub-image, 1st pixel value
+    print(len(images[0][0][0][1]))
 
+    exit(5)
     buildNetwork(trainingSet, testingSet, len(labels), attributes, labels)
     
 
@@ -86,7 +99,7 @@ if __name__ == "__main__":
     learning_rate = 1#float(sys.argv[2]) # K-Value (an integer)
     training_runs = 1#int(sys.argv[3])
     percentage = 1#float(sys.argv[4])  # Percentage of data to be used for TRAINING
-    divisonNum = #int(sys.argv[5])
+    divisionNum = 2#int(sys.argv[5]) #Ideally some multiple of 2 for convenience
     seed = 1 #float(sys.argv[6])
 
     
@@ -106,7 +119,7 @@ if __name__ == "__main__":
         photoDir = CWD + "/" + photoType
         for imageName in os.listdir(photoDir):
             if ".jpg" in imageName:
-                image = Image.open(photoDir +"/"+ imageName).convert('LA') #Greyscales and keeps alpha
+                image = Image.open(photoDir +"/"+ imageName).convert('L') #Greyscales
                 photoTypeList.append([image,photoType])
             else:
                 continue
