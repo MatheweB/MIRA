@@ -35,6 +35,8 @@ def getLargestImage(images):
         x = size[0]
         y = size[1]
         diff = math.fabs(x-y)
+        if diff == 0: #accounts for a perfect square
+            diff = 1
         if diff/(x+y) < bestDim:
             bestDim = diff/(x+y)
             largestImage = image
