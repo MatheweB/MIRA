@@ -4,16 +4,12 @@ import sys
 import tensorflow as tf
 import math
 
-
-#images = [[phototype1[image[imageFile,imageName]]
-
 def buildNetwork(training, testing, labelNum, attributes, labels):
     #Do networthy stuff
     pass
 
-def subdivide(images,divisionNum): #squares go DOWN, not up
+def subdivide(images,divisionNum,stepNum): #squares go DOWN, not up
     imageSideSize = images[0][0][0].size[0] #gets the length of one side of an image
-    stepNum = 2 #Decides how far over we move per subdivision (keep this as 2 or some multiple of 2)
 
     segNum = (imageSideSize/divisionNum)/stepNum #describes how much we should move over each time
 
@@ -26,23 +22,22 @@ def subdivide(images,divisionNum): #squares go DOWN, not up
     while currentSize < totalSize:
         currentSize = currentSize + segNum
         divisionList.append(currentSize)
-    
+
     for imageType in images:
         for image in imageType:
             subImageList = []
             for xStep in divisionList:
                 for yStep in divisionList:
-                    subImage = image[0].crop((xStep,yStep,squareSize,squareSize)) #FIGURE THIS OUT
-                    subImage.show() #Remove when done
+                    subImage = image[0].crop((xStep,yStep,xStep+squareSize,yStep+squareSize))
                     subImageList.append(list(subImage.getdata()))
             image[0] = subImageList #changes all images into an array of sub-images    
     
 
-def preProcessImages(images):
-    imageSize = getLargestImage(images) #[x,y]
+def preProcessImages(images,modNum):
+    imageSize = getLargestImage(images,modNum) #[x,y]
     transformImages(images, imageSize)
 
-def getLargestImage(images): #gets the largest, most square image
+def getLargestImage(images,modNum): #gets the largest, most square image
     largestImage = None
     bestDim = 1
     
@@ -67,7 +62,7 @@ def getLargestImage(images): #gets the largest, most square image
         if y < x:
             y += 1
             
-    while x%4 != 0: #ensures the dimensions are easy to deal with in subdividing
+    while x%modNum != 0: #ensures the dimensions are easy to deal with in subdividing
         x += 1
         y += 1
 
@@ -80,15 +75,14 @@ def transformImages (images, size):
             image[0] = image[0].resize(size, Image.ANTIALIAS)
     
     
-def main(images,num_neurons,learning_rate,training_runs,percentage,divisionNum,seed):
+def main(images,num_neurons,learning_rate,training_runs,percentage,divisionNum,stepNum,seed):
                        
-    preProcessImages(images)
-    subdivide(images,divisionNum)
+    preProcessImages(images,(stepNum*divisionNum))
+    subdivide(images,divisionNum,stepNum)
 
     print(len(images[0][0][0][0])) #imagetype,image,imagefile,1st sub-image, 1st pixel value
     print(len(images[0][0][0][1]))
 
-    exit(5)
     buildNetwork(trainingSet, testingSet, len(labels), attributes, labels)
     
 
@@ -96,11 +90,12 @@ def main(images,num_neurons,learning_rate,training_runs,percentage,divisionNum,s
 
 if __name__ == "__main__":
     num_neurons = 1#int(sys.argv[1])
-    learning_rate = 1#float(sys.argv[2]) # K-Value (an integer)
+    learning_rate = 1#float(sys.argv[2])
     training_runs = 1#int(sys.argv[3])
-    percentage = 1#float(sys.argv[4])  # Percentage of data to be used for TRAINING
-    divisionNum = 2#int(sys.argv[5]) #Ideally some multiple of 2 for convenience
-    seed = 1 #float(sys.argv[6])
+    percentage = 1#float(sys.argv[4])  #Percentage of data to be used for TRAINING
+    divisionNum = 3#int(sys.argv[5]) #How many times we want to divide up the image into smaller squares
+    stepNum = 2#int(sys.argv[6]) #Decides how much overlap we have per subdivision 
+    seed = 1 #float(sys.argv[7])
 
     
     #Opens Images Here (Image files must be of type .jpg)
@@ -125,7 +120,7 @@ if __name__ == "__main__":
                 continue
         images.append(photoTypeList)
                 
-    main(images,num_neurons,learning_rate,training_runs,percentage,divisionNum,seed)
+    main(images,num_neurons,learning_rate,training_runs,percentage,divisionNum,stepNum,seed)
      
     
     
