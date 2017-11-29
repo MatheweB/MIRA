@@ -5,7 +5,6 @@ import tensorflow as tf
 import math
 
 def buildNetwork(training, testing, labelNum, attributes, labels):
-    #Do networthy stuff
     pass
 
 def subdivide(images,divisionNum,stepNum): #squares go DOWN, not up
@@ -56,17 +55,17 @@ def getLargestImage(images,modNum): #gets the largest, most square image
     largestSize = largestImage.size
     x = largestSize[0]
     y = largestSize[1]
-    while x != y: #ensures the size is a square
-        if x < y:
-            x += 1
-        if y < x:
-            y += 1
+    if x != y:
+        if x > y:
+            y = x
+        if y > x:
+            x = y
+    
             
-    while x%modNum != 0: #ensures the dimensions are easy to deal with in subdividing
+    while x%modNum != 0: #ensures the dimensions are easy to deal with in subdividing (have factors that work) 
         x += 1
-        y += 1
 
-    return [x,y]
+    return [x,x]
 
 
 def transformImages (images, size): 
@@ -76,7 +75,7 @@ def transformImages (images, size):
     
     
 def main(images,num_neurons,learning_rate,training_runs,percentage,divisionNum,stepNum,seed):
-                       
+    
     preProcessImages(images,(stepNum*divisionNum))
     subdivide(images,divisionNum,stepNum)
 
@@ -104,11 +103,9 @@ if __name__ == "__main__":
     CWD = os.getcwd() + "/photos"
     
     for photoType in os.listdir(CWD): #Adds all photo type folders
-        if "." in photoType:
-            continue
-        else:
+        if "." not in photoType:
             photoTypes.append(photoType)
-    
+            
     for photoType in photoTypes:
         photoTypeList = [] #separates all images of a specific phototype for easy train/test distribution
         photoDir = CWD + "/" + photoType
@@ -116,8 +113,7 @@ if __name__ == "__main__":
             if ".jpg" in imageName:
                 image = Image.open(photoDir +"/"+ imageName).convert('L') #Greyscales
                 photoTypeList.append([image,photoType])
-            else:
-                continue
+                
         images.append(photoTypeList)
                 
     main(images,num_neurons,learning_rate,training_runs,percentage,divisionNum,stepNum,seed)
