@@ -7,9 +7,8 @@ import math
 def buildNetwork(training, testing, labelNum, attributes, labels):
     pass
 
-def subdivide(images,divisionNum,stepNum): #squares go DOWN, not up
-    imageSideSize = images[0][0][0].size[0] #gets the length of one side of an image
-
+def subdivide(images,divisionNum,stepNum,imageSideSize): #squares go DOWN, not up
+    
     segNum = (imageSideSize/divisionNum)/stepNum #describes how much we should move over each time
 
     divisionList = [] #List of steps for our algorithm
@@ -35,6 +34,7 @@ def subdivide(images,divisionNum,stepNum): #squares go DOWN, not up
 def preProcessImages(images,modNum):
     imageSize = getLargestImage(images,modNum) #[x,y]
     transformImages(images, imageSize)
+    return imageSize[0]
 
 def getLargestImage(images,modNum): #gets the largest, most square image
     largestImage = None
@@ -60,7 +60,6 @@ def getLargestImage(images,modNum): #gets the largest, most square image
             y = x
         if y > x:
             x = y
-    
             
     while x%modNum != 0: #ensures the dimensions are easy to deal with in subdividing (have factors that work) 
         x += 1
@@ -76,8 +75,8 @@ def transformImages (images, size):
     
 def main(images,num_neurons,learning_rate,training_runs,percentage,divisionNum,stepNum,seed):
     
-    preProcessImages(images,(stepNum*divisionNum))
-    subdivide(images,divisionNum,stepNum)
+    imageSideSize = preProcessImages(images,(stepNum*divisionNum))
+    subdivide(images,divisionNum,stepNum,imageSideSize)
 
     print(len(images[0][0][0][0])) #imagetype,image,imagefile,1st sub-image, 1st pixel value
     print(len(images[0][0][0][1]))
