@@ -6,58 +6,29 @@ import math
 
 def buildNetwork(training, testing, labelNum, attributes, labels):
 
-    #numAttributes = size of a sub-picture list (each picture)
+    #None = number of images
+    #numSub = number of sub-images
+    #numPixel = number of pixels in sub-image
 
-    #None = numOfImages*numOfSubImage(of 1 pic)
-    #x = x-dimension of sub-image
-    #y = y-dimension of sub-image
-    x = tensorflow.placeholder(tensorflow.float32, shape = [None, x, y])
+    x = tf.placeholder(tf.float32, shape = [None, numSub, numPixel])
 
-    #HIDDEN LAYER
-    w_hidden = tensorflow.Variable(tensorflow.truncated_normal([numAttributes, NUM_NEURONS],
-                                               stddev = 0.01, seed = seedy))
-    
-    b_hidden = tensorflow.Variable(tensorflow.constant(0.1, shape = [NUM_NEURONS]))
+    #Layer 1
+    w_hidden_1 = tf.Variable(tf.truncated_normal[])
 
-    net_hidden = tensorflow.matmul(x, w_hidden) + b_hidden
 
-    out_hidden = tensorflow.sigmoid(net_hidden)
+    #Layer2
+    w_hidden_2
 
-    #OUTPUT LAYER
-    w_output = tensorflow.Variable(tensorflow.truncated_normal([NUM_NEURONS, numLabels], stddev=0.01,
-                                                               seed = seedy))
 
-    b_output = tensorflow.Variable(tensorflow.constant(0.1, shape = [numLabels]))
+    #Output Layer
+    w_hidden_3
 
-    net_output = tensorflow.matmul(out_hidden, w_output) + b_output
 
-    if numLabels != 1:
-        predict = tensorflow.nn.softmax(net_output)
-    else:
-        predict = tensorflow.sigmoid(net_output)
+    #None = number of images
+    #numlabels = number of labels (10 for our original set)
+    y = tf.placeholder(tf.float32, shape = [None, numSub, numLabels])
 
-    #True labels
-    y = tensorflow.placeholder(tensorflow.float32, shape = [None, numLabels])
-
-    if numLabels != 1:
-        cost = tensorflow.reduce_mean(tensorflow.nn.softmax_cross_entropy_with_logits(labels=y,logits=net_output))
-    else:
-        cost = tensorflow.reduce_sum(0.5*(y-predict)*(y-predict))
-        
-    trainer = tensorflow.train.AdamOptimizer(LEARNING_RATE).minimize(cost)
-
-    sess = tensorflow.Session()
-    init = tensorflow.global_variables_initializer().run(session = sess)
-
-    #Training:
-    runs = 0
-    
-    while(runs < training_runs):
-        runs += 1
-        _,p = sess.run([trainer,predict], feed_dict = {x:training[0],y:training[1]})
-        
-    predictionList = sess.run(predict, feed_dict = {x:test[0]})
-    return predictionList
+    pass
 
 
 def subdivide(images,divisionNum,stepNum,imageSideSize): #squares go DOWN, not up
