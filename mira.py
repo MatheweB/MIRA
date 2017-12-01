@@ -37,7 +37,7 @@ def buildNetwork(training, testing, numLabels, numSub, numPixels):
     
 def main(instances,num_neurons,learning_rate,training_runs,percentage,divisionNum,stepNum):
     
-    trainingSet, testingSet = preProcessImages(instances,(stepNum*divisionNum), divisionNum, stepNum) #MAKE SURE THESE ARE RIGHT
+    trainingSet, testingSet = preProcessImages(instances,(stepNum*divisionNum), divisionNum, stepNum, percentage) #MAKE SURE THESE ARE RIGHT
 
     buildNetwork(trainingSet, testingSet, len(instances), len(instances[0][0].subImages), len(instances[0][0].subImages[0]))
     

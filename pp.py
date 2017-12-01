@@ -9,6 +9,27 @@ class Instance:
         self.image = None
         self.subImages = []
 
+def vectorizeLabels(instances):
+    numLabels = len(instances)
+    for n in range(0, numLabels):
+        for i in instances[n]:
+            vl = [0]*numLabels
+            vl[n] = 1
+            i.vLabel = vl
+
+def splitSets(instances, tperc):
+    trainSplit = []
+    testSplit = []
+    for n in instances:
+        random.shuffle(instances[n])
+        splitIdx = int(len(instances[n]) * tperc)
+        trainSplit.extend(instances[n][:splitIdx])
+        testSplit.extend(instances[n][splitIdx:])
+    random.shuffle(trainSplit)
+    random.shuffle(testSplit)
+    return trainSplit, testSplit
+        
+
 def subdivide(instances,divisionNum,stepNum,imageSideSize): #squares go DOWN, not up
     
     segNum = (imageSideSize/divisionNum)/stepNum #describes how much we should move over each time
@@ -33,7 +54,7 @@ def subdivide(instances,divisionNum,stepNum,imageSideSize): #squares go DOWN, no
             instance.subImages = subImageList #changes all images into an array of sub-images    
     
 
-def preProcessImages(instances,modNum, divisionNum, stepNum):
+def preProcessImages(instances,modNum, divisionNum, stepNum, tperc):
     imageSize = getLargestImage(instances,modNum) #[x,y]
     imageSideSize = imageSize[0]
     
@@ -43,7 +64,7 @@ def preProcessImages(instances,modNum, divisionNum, stepNum):
     exit(5)
     
     vectorizeLabels(instances) #QUINN TO WRITE THESE
-    return splitSets(instances)
+    return splitSets(instances, tperc)
 
 def getLargestImage(instances,modNum): #gets the largest, most square image
     largestImage = None
