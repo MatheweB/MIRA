@@ -5,7 +5,60 @@ import tensorflow as tf
 import math
 
 def buildNetwork(training, testing, labelNum, attributes, labels):
-    pass
+
+    #numAttributes = size of a sub-picture list (each picture)
+
+    #None = numOfImages*numOfSubImage(of 1 pic)
+    #x = x-dimension of sub-image
+    #y = y-dimension of sub-image
+    x = tensorflow.placeholder(tensorflow.float32, shape = [None, x, y])
+
+    #HIDDEN LAYER
+    w_hidden = tensorflow.Variable(tensorflow.truncated_normal([numAttributes, NUM_NEURONS],
+                                               stddev = 0.01, seed = seedy))
+    
+    b_hidden = tensorflow.Variable(tensorflow.constant(0.1, shape = [NUM_NEURONS]))
+
+    net_hidden = tensorflow.matmul(x, w_hidden) + b_hidden
+
+    out_hidden = tensorflow.sigmoid(net_hidden)
+
+    #OUTPUT LAYER
+    w_output = tensorflow.Variable(tensorflow.truncated_normal([NUM_NEURONS, numLabels], stddev=0.01,
+                                                               seed = seedy))
+
+    b_output = tensorflow.Variable(tensorflow.constant(0.1, shape = [numLabels]))
+
+    net_output = tensorflow.matmul(out_hidden, w_output) + b_output
+
+    if numLabels != 1:
+        predict = tensorflow.nn.softmax(net_output)
+    else:
+        predict = tensorflow.sigmoid(net_output)
+
+    #True labels
+    y = tensorflow.placeholder(tensorflow.float32, shape = [None, numLabels])
+
+    if numLabels != 1:
+        cost = tensorflow.reduce_mean(tensorflow.nn.softmax_cross_entropy_with_logits(labels=y,logits=net_output))
+    else:
+        cost = tensorflow.reduce_sum(0.5*(y-predict)*(y-predict))
+        
+    trainer = tensorflow.train.AdamOptimizer(LEARNING_RATE).minimize(cost)
+
+    sess = tensorflow.Session()
+    init = tensorflow.global_variables_initializer().run(session = sess)
+
+    #Training:
+    runs = 0
+    
+    while(runs < training_runs):
+        runs += 1
+        _,p = sess.run([trainer,predict], feed_dict = {x:training[0],y:training[1]})
+        
+    predictionList = sess.run(predict, feed_dict = {x:test[0]})
+    return predictionList
+
 
 def subdivide(images,divisionNum,stepNum,imageSideSize): #squares go DOWN, not up
     
