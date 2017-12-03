@@ -7,7 +7,6 @@ class Instance:
         self.sLabel = ""
         self.vLabel = []
         self.image = None
-        self.subImages = []
 
 def vectorizeLabels(instances):
     numLabels = len(instances)
@@ -29,41 +28,13 @@ def splitSets(instances, tperc):
     random.shuffle(testSplit)
     return trainSplit, testSplit
         
-
-def subdivide(instances,divisionNum,stepNum,imageSideSize): #squares go DOWN, not up
-    
-    segNum = (imageSideSize/divisionNum)/stepNum #describes how much we should move over each time
-
-    divisionList = [] #List of steps for our algorithm
-
-    squareSize = (imageSideSize/divisionNum)
-    totalSize = (imageSideSize) - squareSize
-    currentSize = 0
-    divisionList.append(currentSize)
-    while currentSize < totalSize:
-        currentSize = currentSize + segNum
-        divisionList.append(currentSize)
-
-    for instanceType in instances:
-        for instance in instanceType:
-            subImageList = []
-            for xStep in divisionList:
-                for yStep in divisionList:
-                    subImage = instance.image.crop((xStep,yStep,xStep+squareSize,yStep+squareSize))
-                    subImageList.append(list(subImage.getdata()))
-            instance.subImages = subImageList #changes all images into an array of sub-images    
-    
-
 def preProcessImages(instances,modNum, divisionNum, stepNum, tperc):
     imageSize = getLargestImage(instances,modNum) #[x,y]
     imageSideSize = imageSize[0]
     
     transformImages(instances, imageSize)
-    subdivide(instances,divisionNum,stepNum,imageSideSize)
 
-    exit(5)
-    
-    vectorizeLabels(instances) #QUINN TO WRITE THESE
+    vectorizeLabels(instances)
     return splitSets(instances, tperc)
 
 def getLargestImage(instances,modNum): #gets the largest, most square image
