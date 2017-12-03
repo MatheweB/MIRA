@@ -1,4 +1,5 @@
 from PIL import Image
+import numpy as np
 import math
 import random
 
@@ -7,6 +8,11 @@ class Instance:
         self.sLabel = ""
         self.vLabel = []
         self.image = None
+
+def numPyIfy(instances):
+    for instanceType in instances:
+        for instance in instanceType:
+            instance.image = np.array(instance.image)
 
 def vectorizeLabels(instances):
     numLabels = len(instances)
@@ -20,21 +26,23 @@ def splitSets(instances, tperc):
     trainSplit = []
     testSplit = []
     for n in instances:
-        random.shuffle(instances[n])
-        splitIdx = int(len(instances[n]) * tperc)
-        trainSplit.extend(instances[n][:splitIdx])
-        testSplit.extend(instances[n][splitIdx:])
+        random.shuffle(n)
+        splitIdx = int(len(n) * tperc)
+        trainSplit.extend(n[:splitIdx])
+        testSplit.extend(n[splitIdx:])
     random.shuffle(trainSplit)
     random.shuffle(testSplit)
     return trainSplit, testSplit
         
-def preProcessImages(instances,modNum, divisionNum, stepNum, tperc):
+def preProcessImages(instances,modNum,tperc):
     imageSize = getLargestImage(instances,modNum) #[x,y]
     imageSideSize = imageSize[0]
     
     transformImages(instances, imageSize)
 
     vectorizeLabels(instances)
+    numPyIfy(instances)
+    
     return splitSets(instances, tperc)
 
 def getLargestImage(instances,modNum): #gets the largest, most square image

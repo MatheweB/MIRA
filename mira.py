@@ -1,45 +1,72 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 from PIL import Image
 from pp import preProcessImages, Instance
+from convo import buildNetwork
 import os
 import sys
 import tensorflow as tf
+import numpy as np
 import math
 import random
 
-def buildNetwork(training, testing, numLabels, numSub, numPixels):
-
-    #None = number of images
-    #numSub = number of sub-images
-    #numPixel = number of pixels in sub-image
-    
-    X = tf.placeholder(tf.float32, shape = [None, numSub, numPixel])
-    
-    Y = tf.placeholder(tf.float32, shape = [None, numLabels])
-
-    #Layer 1
-    #w_hidden_1 = tf.Variable(tf.truncated_normal[])
-
-
-    #Layer2
-    #w_hidden_2
-
-
-    #Output Layer
-    #w_hidden_3
-
-
-    #None = number of images
-    #numlabels = number of labels (10 for our original set)
-    #y = tf.placeholder(tf.float32, shape = [None, numSub, numLabels])
-
-    pass
+tf.logging.set_verbosity(tf.logging.INFO)
 
     
 def main(instances,num_neurons,learning_rate,training_runs,percentage,divisionNum,stepNum):
+   # tf.app.run()
     
-    trainingSet, testingSet = preProcessImages(instances,(stepNum*divisionNum), divisionNum, stepNum, percentage) #MAKE SURE THESE ARE RIGHT
+    trainingSet, testingSet = preProcessImages(instances,(stepNum*divisionNum),percentage)
 
-    buildNetwork(trainingSet, testingSet, len(instances), len(instances[0][0].subImages), len(instances[0][0].subImages[0]))
+    #BUILDS CLASSIFIER
+    mnist_classifier = tf.estimator.Estimator(
+        model_fn=buildNetwork, model_dir=str(os.getcwd())+'/model')
+
+    tensors_to_log = {"probabilities": "softmax_tensor"} #Uses softmax
+    logging_hook = tf.train.LoggingTensorHook(tensors=tensors_to_log, every_n_iter=50) #probabilities logged every 50 iterations
+
+    #instantiating images
+    train_data = []
+    eval_data = []
+    for inst in trainingSet:
+        train_data.append(inst.image)
+    for inst in testingSet:
+        eval_data.append(inst.image)
+
+    #instrantiating labels
+    train_labels = []
+    eval_labels = []
+    for inst in trainingSet:
+        train_labels.append(inst.vLabel)
+    for inst in testingSet:
+        eval_labels.append(inst.vLabel)
+    
+    train_labels = np.asarray(train_labels, dtype=np.int32)
+    eval_labels = np.asarray(train_labels, dtype=np.int32)
+
+    
+    # Train the model
+    train_input_fn = tf.estimator.inputs.numpy_input_fn(
+        x={"x": train_data},
+        y=train_labels,
+        batch_size=100,
+        num_epochs=None,
+        shuffle=True)
+    photo_classifier.train(
+        input_fn=train_input_fn,
+        steps=20000,
+        hooks=[logging_hook])
+    
+    # Evaluate the model and print results
+    eval_input_fn = tf.estimator.inputs.numpy_input_fn(
+        x={"x": eval_data},
+        y=eval_labels,
+        num_epochs=1,
+        shuffle=False)
+    eval_results = mnist_classifier.evaluate(input_fn=eval_input_fn)
+    print(eval_results)
+        
     
 
 if __name__ == "__main__":
@@ -66,7 +93,7 @@ if __name__ == "__main__":
         photoDir = CWD + "/" + photoType
         for imageName in os.listdir(photoDir):
             if ".jpg" in imageName:
-                image = Image.open(photoDir +"/"+ imageName).convert('L') #Greyscales
+                image = Image.open(photoDir +"/"+ imageName)
                 instance = Instance()
                 instance.sLabel = photoType
                 instance.image = image
@@ -75,8 +102,9 @@ if __name__ == "__main__":
         instances.append(photoTypeList)
 
     random.seed(seed)
-                
+    
     main(instances,num_neurons,learning_rate,training_runs,percentage,divisionNum,stepNum)
+    
 
     
     
