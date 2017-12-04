@@ -12,7 +12,7 @@ class Instance:
 def numPyIfy(instances):
     for instanceType in instances:
         for instance in instanceType:
-            instance.image = np.array(instance.image)
+            instance.image = np.asarray(instance.image, dtype=np.float32)
 
 def vectorizeLabels(instances):
     numLabels = len(instances)
@@ -42,8 +42,9 @@ def preProcessImages(instances,modNum,tperc):
 
     vectorizeLabels(instances)
     numPyIfy(instances)
-    
-    return splitSets(instances, tperc)
+
+    trainingSet, testingSet = splitSets(instances, tperc)
+    return trainingSet, testingSet, int(imageSideSize)
 
 def getLargestImage(instances,modNum): #gets the largest, most square image
     largestImage = None

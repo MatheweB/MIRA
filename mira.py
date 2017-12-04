@@ -1,27 +1,30 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+import tensorflow as tf
 from PIL import Image
 from pp import preProcessImages, Instance
-from convo import buildNetwork
+import convo
+
 import os
 import sys
-import tensorflow as tf
 import numpy as np
 import math
 import random
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
-    
 def main(instances,num_neurons,learning_rate,training_runs,percentage,divisionNum,stepNum):
-   # tf.app.run()
+
+    convo.modNum = int(stepNum*divisionNum)
+    convo.divisionNum = int(divisionNum)
+    convo.strideNum = int(stepNum)
     
-    trainingSet, testingSet = preProcessImages(instances,(stepNum*divisionNum),percentage)
+    trainingSet, testingSet, convo.dimension = preProcessImages(instances,(stepNum*divisionNum),percentage)
 
     #BUILDS CLASSIFIER
-    mnist_classifier = tf.estimator.Estimator(
-        model_fn=buildNetwork, model_dir=str(os.getcwd())+'/model')
+    photo_classifier = tf.estimator.Estimator(
+        model_fn=convo.buildNetwork, model_dir=str(os.getcwd())+'/model')
 
     tensors_to_log = {"probabilities": "softmax_tensor"} #Uses softmax
     logging_hook = tf.train.LoggingTensorHook(tensors=tensors_to_log, every_n_iter=50) #probabilities logged every 50 iterations
@@ -34,6 +37,9 @@ def main(instances,num_neurons,learning_rate,training_runs,percentage,divisionNu
     for inst in testingSet:
         eval_data.append(inst.image)
 
+    train_data = np.asarray(train_data, dtype=np.float32)
+    eval_data = np.asarray(eval_data, dtype=np.float32)
+
     #instrantiating labels
     train_labels = []
     eval_labels = []
@@ -42,8 +48,8 @@ def main(instances,num_neurons,learning_rate,training_runs,percentage,divisionNu
     for inst in testingSet:
         eval_labels.append(inst.vLabel)
     
-    train_labels = np.asarray(train_labels, dtype=np.int32)
-    eval_labels = np.asarray(train_labels, dtype=np.int32)
+    train_labels = np.asarray(train_labels, dtype=np.float32)
+    eval_labels = np.asarray(eval_labels, dtype=np.float32)
 
     
     # Train the model
@@ -74,7 +80,7 @@ if __name__ == "__main__":
     learning_rate = 1#float(sys.argv[2])
     training_runs = 1#int(sys.argv[3])
     percentage = 1#float(sys.argv[4])  #Percentage of data to be used for TRAINING
-    divisionNum = 3#int(sys.argv[5]) #How many times we want to divide up the image into smaller squares
+    divisionNum = 2#int(sys.argv[5]) #How many times we want to divide up the image into smaller squares
     stepNum = 2#int(sys.argv[6]) #Decides how much overlap we have per subdivision 
     seed = 1 #float(sys.argv[7])
     
@@ -93,15 +99,18 @@ if __name__ == "__main__":
         photoDir = CWD + "/" + photoType
         for imageName in os.listdir(photoDir):
             if ".jpg" in imageName:
-                image = Image.open(photoDir +"/"+ imageName)
+                image = Image.open(photoDir +"/"+ imageName).convert('RGB')
+                storedImg = image.copy()
+                image.close()
                 instance = Instance()
                 instance.sLabel = photoType
-                instance.image = image
+                instance.image = storedImg
                 photoTypeList.append(instance)
                 
         instances.append(photoTypeList)
 
     random.seed(seed)
+    tf.set_random_seed(seed) #Sets seed for tensorflow
     
     main(instances,num_neurons,learning_rate,training_runs,percentage,divisionNum,stepNum)
     
