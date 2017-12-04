@@ -34,12 +34,19 @@ def splitSets(instances, tperc):
     random.shuffle(testSplit)
     return trainSplit, testSplit
         
-def preProcessImages(instances,modNum,tperc):
-    imageSize = getLargestImage(instances,modNum) #[x,y]
-    imageSideSize = imageSize[0]
+def preProcessImages(instances,modNum,tperc, specificDimension):
     
-    transformImages(instances, imageSize)
+    if specificDimension != 0:
+        while specificDimension%modNum != 0: #ensures divisibility
+            specificDimension += 1
+        imageSideSize = specificDimension
+        transformImages(instances, (specificDimension,specificDimension))
 
+    else:
+        imageSize = getLargestImage(instances,modNum) #[x,y]
+        imageSideSize = imageSize[0]
+        transformImages(instances, imageSize)
+    
     vectorizeLabels(instances)
     numPyIfy(instances)
 

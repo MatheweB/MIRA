@@ -14,13 +14,16 @@ import random
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
-def main(instances,num_neurons,learning_rate,training_runs,percentage,divisionNum,stepNum):
+def main(instances,num_neurons,learning_rate,training_runs,percentage,divisionNum,stepNum,specificDimension, labelNum):
 
     convo.modNum = int(stepNum*divisionNum)
     convo.divisionNum = int(divisionNum)
     convo.strideNum = int(stepNum)
+    convo.learning_rate = float(learning_rate)
+    convo.labelNum = labelNum
+    convo.num_neurons = num_neurons #Doesn't work
     
-    trainingSet, testingSet, convo.dimension = preProcessImages(instances,(stepNum*divisionNum),percentage)
+    trainingSet, testingSet, convo.dimension = preProcessImages(instances,(stepNum*divisionNum),percentage,specificDimension)
 
     #BUILDS CLASSIFIER
     photo_classifier = tf.estimator.Estimator(
@@ -43,14 +46,15 @@ def main(instances,num_neurons,learning_rate,training_runs,percentage,divisionNu
     #instrantiating labels
     train_labels = []
     eval_labels = []
+
+    
     for inst in trainingSet:
         train_labels.append(inst.vLabel)
     for inst in testingSet:
         eval_labels.append(inst.vLabel)
     
-    train_labels = np.asarray(train_labels, dtype=np.float32)
-    eval_labels = np.asarray(eval_labels, dtype=np.float32)
-
+    train_labels = np.asarray(train_labels, dtype=np.int32)
+    eval_labels = np.asarray(eval_labels, dtype=np.int32)
     
     # Train the model
     train_input_fn = tf.estimator.inputs.numpy_input_fn(
@@ -61,7 +65,7 @@ def main(instances,num_neurons,learning_rate,training_runs,percentage,divisionNu
         shuffle=True)
     photo_classifier.train(
         input_fn=train_input_fn,
-        steps=20000,
+        steps=training_runs,
         hooks=[logging_hook])
     
     # Evaluate the model and print results
@@ -70,19 +74,20 @@ def main(instances,num_neurons,learning_rate,training_runs,percentage,divisionNu
         y=eval_labels,
         num_epochs=1,
         shuffle=False)
-    eval_results = mnist_classifier.evaluate(input_fn=eval_input_fn)
+    eval_results = photo_classifier.evaluate(input_fn=eval_input_fn)
     print(eval_results)
         
     
 
 if __name__ == "__main__":
-    num_neurons = 1#int(sys.argv[1])
-    learning_rate = 1#float(sys.argv[2])
-    training_runs = 1#int(sys.argv[3])
-    percentage = 1#float(sys.argv[4])  #Percentage of data to be used for TRAINING
+    num_neurons = 1000#int(sys.argv[1])
+    learning_rate = 0.001#float(sys.argv[2])
+    training_runs = 1000#int(sys.argv[3])
+    percentage = 0.70#float(sys.argv[4])  #Percentage of data to be used for TRAINING
     divisionNum = 2#int(sys.argv[5]) #How many times we want to divide up the image into smaller squares
     stepNum = 2#int(sys.argv[6]) #Decides how much overlap we have per subdivision 
-    seed = 1 #float(sys.argv[7])
+    seed = 123 #float(sys.argv[7])
+    specificDimension = 32#float(sys.argv[8])
     
     #Opens Images Here (Image files must be of type .jpg)
     instances = []
@@ -112,7 +117,7 @@ if __name__ == "__main__":
     random.seed(seed)
     tf.set_random_seed(seed) #Sets seed for tensorflow
     
-    main(instances,num_neurons,learning_rate,training_runs,percentage,divisionNum,stepNum)
+    main(instances,num_neurons,learning_rate,training_runs,percentage,divisionNum,stepNum,specificDimension, len(photoTypes))
     
 
     

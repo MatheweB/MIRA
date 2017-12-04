@@ -9,6 +9,14 @@ dimension = 0
 modNum = 0
 divisionNum = 0
 strideNum = 0
+learning_rate = 0
+labelNum = 0
+
+num_neurons = 0
+
+def anti_one_hot(labels):
+  unencoded = tf.argmax(labels, axis=1)
+  return unencoded
 
 def buildNetwork(features, labels, mode):
   
@@ -37,16 +45,15 @@ def buildNetwork(features, labels, mode):
   pool2 = tf.layers.max_pooling2d(inputs=conv2, pool_size=[divisionNum, divisionNum], strides=strideNum)
 
   # Dense Layer
-  reshapeNum = int(dimension/modNum)
-  #tf.cast(pool2, tf.int32)
   
+  reshapeNum = int(dimension/modNum)
   pool2_flat = tf.reshape(pool2, [-1, int(reshapeNum) * int(reshapeNum) * int(64)])
-  dense = tf.layers.dense(inputs=pool2_flat, units=1024, activation=tf.nn.relu)
+  dense = tf.layers.dense(inputs=pool2_flat, units=1024, activation=tf.nn.relu) #Num neurons here?
   dropout = tf.layers.dropout(
       inputs=dense, rate=0.4, training=mode == tf.estimator.ModeKeys.TRAIN)
 
   # Logits Layer
-  logits = tf.layers.dense(inputs=dropout, units=10) #10 Labels!
+  logits = tf.layers.dense(inputs=dropout, units=10) #depends on label num
 
   predictions = {
       # Generate predictions (for PREDICT and EVAL mode)
@@ -66,7 +73,7 @@ def buildNetwork(features, labels, mode):
 
   # Configure the Training Op (for TRAIN mode)
   if mode == tf.estimator.ModeKeys.TRAIN:
-    optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.001)
+    optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate)
     train_op = optimizer.minimize(
         loss=loss,
         global_step=tf.train.get_global_step())
@@ -75,6 +82,6 @@ def buildNetwork(features, labels, mode):
   # Add evaluation metrics (for EVAL mode)
   eval_metric_ops = {
       "accuracy": tf.metrics.accuracy(
-          labels=labels, predictions=predictions["classes"])}
+          labels=anti_one_hot(labels), predictions=predictions["classes"])}
   return tf.estimator.EstimatorSpec(
       mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
