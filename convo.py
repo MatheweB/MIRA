@@ -11,14 +11,18 @@ divisionNum = 0
 strideNum = 0
 learning_rate = 0
 labelNum = 0
-
 num_neurons = 0
+random_seed = 0
 
 def anti_one_hot(labels):
   unencoded = tf.argmax(labels, axis=1)
   return unencoded
 
 def buildNetwork(features, labels, mode):
+  tf.set_random_seed(random_seed)
+
+  #Variables to change:
+  drop_num = 0.4 #Drps % of items in training
   
   """Model function for CNN."""
   # Input Layer
@@ -34,6 +38,9 @@ def buildNetwork(features, labels, mode):
 
   # Pooling Layer #1
   pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[divisionNum, divisionNum], strides=strideNum)
+  
+  reshapeNum1 = dimension/divisionNum #CHANGE??
+  print(reshapeNum1)
 
   # Convolutional Layer #2 and Pooling Layer #2
   conv2 = tf.layers.conv2d(
@@ -43,14 +50,16 @@ def buildNetwork(features, labels, mode):
       padding="same",
       activation=tf.nn.relu)
   pool2 = tf.layers.max_pooling2d(inputs=conv2, pool_size=[divisionNum, divisionNum], strides=strideNum)
+  
+  reshapeNum2 = reshapeNum1/divisionNum #CHANGE??
+  print(reshapeNum2)
 
   # Dense Layer
   
-  reshapeNum = int(dimension/modNum)
-  pool2_flat = tf.reshape(pool2, [-1, int(reshapeNum) * int(reshapeNum) * int(64)])
+  pool2_flat = tf.reshape(pool2, [-1, int(reshapeNum2 * reshapeNum2 * 64)]) #64 = num of filters in pool2
   dense = tf.layers.dense(inputs=pool2_flat, units=1024, activation=tf.nn.relu) #Num neurons here?
   dropout = tf.layers.dropout(
-      inputs=dense, rate=0.4, training=mode == tf.estimator.ModeKeys.TRAIN)
+      inputs=dense, rate=drop_num, training=mode == tf.estimator.ModeKeys.TRAIN)
 
   # Logits Layer
   logits = tf.layers.dense(inputs=dropout, units=10) #depends on label num

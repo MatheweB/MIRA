@@ -14,7 +14,7 @@ import random
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
-def main(instances,num_neurons,learning_rate,training_runs,percentage,divisionNum,stepNum,specificDimension, labelNum):
+def main(instances,num_neurons,learning_rate,training_runs,percentage,divisionNum,stepNum,specificDimension,labelNum,seed):
 
     convo.modNum = int(stepNum*divisionNum)
     convo.divisionNum = int(divisionNum)
@@ -22,6 +22,7 @@ def main(instances,num_neurons,learning_rate,training_runs,percentage,divisionNu
     convo.learning_rate = float(learning_rate)
     convo.labelNum = labelNum
     convo.num_neurons = num_neurons #Doesn't work
+    convo.random_seed = seed
     
     trainingSet, testingSet, convo.dimension = preProcessImages(instances,(stepNum*divisionNum),percentage,specificDimension)
 
@@ -81,7 +82,7 @@ def main(instances,num_neurons,learning_rate,training_runs,percentage,divisionNu
 
 if __name__ == "__main__":
     num_neurons = 1000#int(sys.argv[1])
-    learning_rate = 0.001#float(sys.argv[2])
+    learning_rate = 0.01#float(sys.argv[2])
     training_runs = 1000#int(sys.argv[3])
     percentage = 0.70#float(sys.argv[4])  #Percentage of data to be used for TRAINING
     divisionNum = 2#int(sys.argv[5]) #How many times we want to divide up the image into smaller squares
@@ -117,7 +118,7 @@ if __name__ == "__main__":
     random.seed(seed)
     tf.set_random_seed(seed) #Sets seed for tensorflow
     
-    main(instances,num_neurons,learning_rate,training_runs,percentage,divisionNum,stepNum,specificDimension, len(photoTypes))
+    main(instances,num_neurons,learning_rate,training_runs,percentage,divisionNum,stepNum,specificDimension, len(photoTypes),seed)
     
 
     
